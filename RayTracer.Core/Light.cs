@@ -1,4 +1,4 @@
-namespace RayTracer;
+namespace RayTracer.Core;
 
 public struct Light(Vector3d position)
 {

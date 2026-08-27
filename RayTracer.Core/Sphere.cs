@@ -1,4 +1,4 @@
-namespace RayTracer;
+namespace RayTracer.Core;
 
 public readonly struct Sphere(Vector3d center, float radius, Material material)
 {

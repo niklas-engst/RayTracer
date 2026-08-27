@@ -17,9 +17,13 @@
       <PackageReference Include="Hexa.NET.ImGui.Backends.GLFW" Version="1.0.18" />
       <PackageReference Include="Hexa.NET.OpenGL4" Version="1.1.0" />
     </ItemGroup>
-    
+
     <ItemGroup>
         <Content Include="Render/Shaders/*" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\RayTracer.Core\RayTracer.Core.csproj" />
     </ItemGroup>
 
 </Project>

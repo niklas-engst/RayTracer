@@ -2,7 +2,7 @@ using System.Numerics;
 using Hexa.NET.ImGui;
 using Hexa.NET.OpenGL;
 
-namespace RayTracer.Render;
+namespace RayTracer;
 
 public class PixelBufferWindow(int width, int height) : GlfwWindow(width, height)
 {
@@ -14,8 +14,8 @@ public class PixelBufferWindow(int width, int height) : GlfwWindow(width, height
 
     protected override void OnLoad()
     {
-        RenderWidth = Math.Max(width, 1);
-        RenderHeight = Math.Max(height, 1);
+        RenderWidth = Math.Max(500, 1);
+        RenderHeight = Math.Max(500, 1);
         Pixels = new uint[RenderWidth * RenderHeight];
 
         _pixelTexture = GL.GenTexture();

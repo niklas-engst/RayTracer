@@ -1,8 +1,5 @@
-using System.Runtime.InteropServices;
+namespace RayTracer.Core;
 
-namespace RayTracer;
-
-[StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct Color(byte r, byte g, byte b, byte a)
 {
     public byte R = r;

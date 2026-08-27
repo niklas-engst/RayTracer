@@ -1,6 +1,7 @@
 using Hexa.NET.ImGui;
+using RayTracer.Core;
 
-namespace RayTracer.Render;
+namespace RayTracer;
 
 public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, height)
 {
@@ -11,7 +12,7 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
     {
         RenderPixels();
 
-        if (!ImGui.Begin("CPU ray tracer"))
+        if (!ImGui.Begin("CPU ray tracer", ImGuiWindowFlags.AlwaysAutoResize))
         {
             ImGui.End();
             return;
@@ -19,7 +20,7 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
         
         ImGui.Text($"Resolution: {RenderWidth} x {RenderHeight}");
         ImGui.Text($"Pixels: {Pixels.Length:N0}");
-        ImGui.Text($"FPS: {1.0 / ImGui.GetIO().DeltaTime:0.0}");
+        ImGui.Text($"FPS: {ImGui.GetIO().Framerate:0.0}");
         
         ImGui.Spacing();
         
@@ -47,7 +48,7 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
         }
         
         var camera = new Vector3d(0, 0, -1);
-        var sphere = new Sphere(new Vector3d(0, 0, 1), 1f, new Material(new Color(0, 255, 255, 255)));
+        var sphere = new Sphere(new Vector3d(0, 0, 1), 1f, new Material(new Color(0, 255, 255, 255), 1f, 1f));
         var light = new Light(new Vector3d(0, 2, -1));
         
         for (var windowY = 0; windowY < RenderHeight; windowY++)

@@ -7,7 +7,7 @@ using Hexa.NET.OpenGL;
 using GLFWmonitorPtr = Hexa.NET.GLFW.GLFWmonitorPtr;
 using GLFWwindowPtr = Hexa.NET.GLFW.GLFWwindowPtr;
 
-namespace RayTracer.Render;
+namespace RayTracer;
 
 public class GlfwWindow(int width, int height)
 {
