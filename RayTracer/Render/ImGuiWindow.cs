@@ -1,9 +1,11 @@
+/*
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.GLFW;
 using Hexa.NET.ImGui.Backends.OpenGL3;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
+using System.Numerics;
 
 namespace RayTracer.Render;
 
@@ -23,17 +25,16 @@ public class ImGuiWindow(GameWindowSettings gameWindowSettings, NativeWindowSett
 
         var io = ImGui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard;
-        io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
         io.IniFilename = null;
 
         // GameWindow is GLFW-based internally. NativePtr is the GLFWwindow*.
         ImGuiImplGLFW.SetCurrentContext(ImGuiContext);
-        ImGuiImplGLFW.InitForOpenGL((GLFWwindow*)WindowPtr, true);
+        var initGlfw = ImGuiImplGLFW.InitForOpenGL((GLFWwindow*)WindowPtr, true);
 
         // Choose GLSL matching your requested OpenGL context.
         // #version 410 works for the OpenGL 4.1 context requested in Program.cs.
         ImGuiImplOpenGL3.SetCurrentContext(ImGuiContext);
-        ImGuiImplOpenGL3.Init("#version 410");
+        var initOpenGl = ImGuiImplOpenGL3.Init("#version 410");
     }
 
     protected override void OnResize(ResizeEventArgs e)
@@ -52,6 +53,15 @@ public class ImGuiWindow(GameWindowSettings gameWindowSettings, NativeWindowSett
         
         ImGuiImplOpenGL3.NewFrame();
         ImGuiImplGLFW.NewFrame();
+
+        // GLFW can report a zero logical size under some Wayland compositors.
+        // OpenTK already tracks the usable window and framebuffer sizes.
+        var io = ImGui.GetIO();
+        io.DisplaySize = new Vector2(Size.X, Size.Y);
+        io.DisplayFramebufferScale = new Vector2(
+            FramebufferSize.X / (float)Math.Max(Size.X, 1),
+            FramebufferSize.Y / (float)Math.Max(Size.Y, 1));
+
         ImGui.NewFrame();
         
         RenderScene(args);
@@ -59,12 +69,6 @@ public class ImGuiWindow(GameWindowSettings gameWindowSettings, NativeWindowSett
 
         ImGui.Render();
         ImGuiImplOpenGL3.RenderDrawData(ImGui.GetDrawData());
-        
-        if ((ImGui.GetIO().ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
-        {
-            ImGui.UpdatePlatformWindows();
-            ImGui.RenderPlatformWindowsDefault();
-        }
 
         SwapBuffers();
     }
@@ -89,3 +93,4 @@ public class ImGuiWindow(GameWindowSettings gameWindowSettings, NativeWindowSett
     
     protected virtual void RenderScene(FrameEventArgs args) { }
 }
+*/

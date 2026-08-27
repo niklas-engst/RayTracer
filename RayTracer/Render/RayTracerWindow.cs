@@ -1,20 +1,16 @@
 using Hexa.NET.ImGui;
-using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Desktop;
 
 namespace RayTracer.Render;
 
-public class RayTracerWindow : PixelBufferWindow
+public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, height)
 {
     protected bool Realtime = true;
     protected bool SinglePass = false;
     
-    public RayTracerWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings) : base(gameWindowSettings, nativeWindowSettings)
+    protected override void RenderInterface()
     {
-    }
+        RenderPixels();
 
-    protected override void RenderInterface(FrameEventArgs args)
-    {
         if (!ImGui.Begin("CPU ray tracer"))
         {
             ImGui.End();
@@ -23,7 +19,7 @@ public class RayTracerWindow : PixelBufferWindow
         
         ImGui.Text($"Resolution: {RenderWidth} x {RenderHeight}");
         ImGui.Text($"Pixels: {Pixels.Length:N0}");
-        ImGui.Text($"FPS: {1.0 / args.Time:0.0}");
+        ImGui.Text($"FPS: {1.0 / ImGui.GetIO().DeltaTime:0.0}");
         
         ImGui.Spacing();
         
@@ -32,6 +28,8 @@ public class RayTracerWindow : PixelBufferWindow
         {
             SinglePass = true;
         }
+
+        RenderPixelBuffer();
         
         ImGui.End();
     }

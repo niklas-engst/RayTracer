@@ -1,173 +1,110 @@
+using System.Numerics;
 using Hexa.NET.ImGui;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK.Windowing.Common;
-using OpenTK.Windowing.Desktop;
+using Hexa.NET.OpenGL;
 
 namespace RayTracer.Render;
 
-public class PixelBufferWindow : ImGuiWindow
+public class PixelBufferWindow(int width, int height) : GlfwWindow(width, height)
 {
     protected int RenderWidth { get; private set; }
     protected int RenderHeight { get; private set; }
+    protected uint[] Pixels { get; private set; } = [];
 
-    // One packed RGBA8 pixel per entry.
-    // Write pixels as: 0xAABBGGRR.
-    protected uint[] Pixels { get; private set; } = Array.Empty<uint>();
-
-    private int _pixelTexture;
-    private int _presentProgram;
-    private int _fullscreenVao;
-
-    private double _elapsedSeconds;
-
-    public PixelBufferWindow(GameWindowSettings gameSettings, NativeWindowSettings nativeSettings) : base(gameSettings, nativeSettings)
-    {
-    }
+    private uint _pixelTexture;
 
     protected override void OnLoad()
     {
-        base.OnLoad();
-
-        _fullscreenVao = GL.GenVertexArray();
-
-        _presentProgram = new ShaderProgram(
-            Path.Combine(AppContext.BaseDirectory, "Render", "Shaders", "fullscreen.vert"),
-            Path.Combine(AppContext.BaseDirectory, "Render", "Shaders", "present.frag")
-        ).Handle;
+        RenderWidth = Math.Max(width, 1);
+        RenderHeight = Math.Max(height, 1);
+        Pixels = new uint[RenderWidth * RenderHeight];
 
         _pixelTexture = GL.GenTexture();
-
-        GL.BindTexture(TextureTarget.Texture2D, _pixelTexture);
-
-        GL.TexParameter(
-            TextureTarget.Texture2D,
-            TextureParameterName.TextureMinFilter,
-            (int)TextureMinFilter.Nearest);
-
-        GL.TexParameter(
-            TextureTarget.Texture2D,
-            TextureParameterName.TextureMagFilter,
-            (int)TextureMagFilter.Nearest);
-
-        GL.TexParameter(
-            TextureTarget.Texture2D,
-            TextureParameterName.TextureWrapS,
-            (int)TextureWrapMode.ClampToEdge);
-
-        GL.TexParameter(
-            TextureTarget.Texture2D,
-            TextureParameterName.TextureWrapT,
-            (int)TextureWrapMode.ClampToEdge);
-
-        GL.BindTexture(TextureTarget.Texture2D, 0);
-
-        // Allocate using the current initial window size.
-        ResizePixelBuffer(Size.X, Size.Y);
+        GL.BindTexture(GLTextureTarget.Texture2D, _pixelTexture);
+        GL.TexParameteri(
+            GLTextureTarget.Texture2D,
+            GLTextureParameterName.MinFilter,
+            (int)GLTextureMinFilter.Nearest);
+        GL.TexParameteri(
+            GLTextureTarget.Texture2D,
+            GLTextureParameterName.MagFilter,
+            (int)GLTextureMagFilter.Nearest);
+        GL.TexParameteri(
+            GLTextureTarget.Texture2D,
+            GLTextureParameterName.WrapS,
+            (int)GLTextureWrapMode.ClampToEdge);
+        GL.TexParameteri(
+            GLTextureTarget.Texture2D,
+            GLTextureParameterName.WrapT,
+            (int)GLTextureWrapMode.ClampToEdge);
+        GL.TexImage2D(
+            GLTextureTarget.Texture2D,
+            0,
+            GLInternalFormat.Rgba8,
+            RenderWidth,
+            RenderHeight,
+            0,
+            GLPixelFormat.Bgra,
+            GLPixelType.UnsignedByte,
+            IntPtr.Zero);
+        GL.BindTexture(GLTextureTarget.Texture2D, 0);
     }
 
-    protected override void OnResize(ResizeEventArgs e)
-    {
-        base.OnResize(e);
-
-        GL.Viewport(0, 0, e.Width, e.Height);
-        ResizePixelBuffer(e.Width, e.Height);
-    }
-
-    protected override void OnUpdateFrame(FrameEventArgs args)
-    {
-        base.OnUpdateFrame(args);
-        _elapsedSeconds += args.Time;
-    }
-
-    protected override void RenderScene(FrameEventArgs args)
+    protected override void RenderInterface()
     {
         RenderPixels();
 
-        GL.Clear(ClearBufferMask.ColorBufferBit);
+        if (!ImGui.Begin("Pixel buffer"))
+        {
+            ImGui.End();
+            return;
+        }
 
-        UploadPixelsToGpu();
-        PresentPixelTexture();
+        RenderPixelBuffer();
+        ImGui.End();
+    }
+
+    protected unsafe void RenderPixelBuffer()
+    {
+        UploadPixels();
+
+        var texture = new ImTextureRef(null, (nint)_pixelTexture);
+        ImGui.Image(
+            texture,
+            new Vector2(RenderWidth, RenderHeight),
+            new Vector2(0, 0),
+            new Vector2(1, 1));
     }
 
     protected override void OnUnload()
     {
-        GL.DeleteTexture(_pixelTexture);
-        GL.DeleteVertexArray(_fullscreenVao);
-        GL.DeleteProgram(_presentProgram);
-
-        base.OnUnload();
-    }
-    
-    protected virtual void RenderPixels() { }
-
-    private void ResizePixelBuffer(int width, int height)
-    {
-        width = Math.Max(width, 1);
-        height = Math.Max(height, 1);
-
-        RenderWidth = width;
-        RenderHeight = height;
-
-        Pixels = new uint[width * height];
-
-        GL.BindTexture(TextureTarget.Texture2D, _pixelTexture);
-
-        // Allocate/reallocate the GPU texture. No pixel data is uploaded here.
-        GL.TexImage2D(
-            TextureTarget.Texture2D,
-            level: 0,
-            internalformat: PixelInternalFormat.Rgba8,
-            width: width,
-            height: height,
-            border: 0,
-            format: PixelFormat.Bgra,
-            type: PixelType.UnsignedByte,
-            pixels: IntPtr.Zero);
-
-        GL.BindTexture(TextureTarget.Texture2D, 0);
+        if (_pixelTexture != 0)
+        {
+            GL.DeleteTexture(_pixelTexture);
+            _pixelTexture = 0;
+        }
     }
 
-    private unsafe void UploadPixelsToGpu()
+    protected virtual void RenderPixels()
     {
-        GL.BindTexture(TextureTarget.Texture2D, _pixelTexture);
+    }
 
+    private unsafe void UploadPixels()
+    {
+        GL.BindTexture(GLTextureTarget.Texture2D, _pixelTexture);
         fixed (uint* pixelPointer = Pixels)
         {
             GL.TexSubImage2D(
-                TextureTarget.Texture2D,
-                level: 0,
-                xoffset: 0,
-                yoffset: 0,
-                width: RenderWidth,
-                height: RenderHeight,
-                format: PixelFormat.Bgra,
-                type: PixelType.UnsignedByte,
-                pixels: (IntPtr)pixelPointer);
+                GLTextureTarget.Texture2D,
+                0,
+                0,
+                0,
+                RenderWidth,
+                RenderHeight,
+                GLPixelFormat.Bgra,
+                GLPixelType.UnsignedByte,
+                pixelPointer);
         }
 
-        GL.BindTexture(TextureTarget.Texture2D, 0);
-    }
-
-    private void PresentPixelTexture()
-    {
-        GL.Disable(EnableCap.DepthTest);
-
-        GL.UseProgram(_presentProgram);
-
-        GL.ActiveTexture(TextureUnit.Texture0);
-        GL.BindTexture(TextureTarget.Texture2D, _pixelTexture);
-
-        var textureLocation = GL.GetUniformLocation(
-            _presentProgram,
-            "uPixels");
-
-        GL.Uniform1(textureLocation, 0);
-
-        GL.BindVertexArray(_fullscreenVao);
-        GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
-
-        GL.BindVertexArray(0);
-        GL.BindTexture(TextureTarget.Texture2D, 0);
-        GL.UseProgram(0);
+        GL.BindTexture(GLTextureTarget.Texture2D, 0);
     }
 }
