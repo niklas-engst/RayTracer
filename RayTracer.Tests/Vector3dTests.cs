@@ -50,6 +50,8 @@ public sealed class Vector3dTests
         var l = new Vector3d(-1, 1, 0).Normalized();
 
         var reflected = l.Reflect(n);
+
+        AssertVectorEqual(new Vector3d(1, 1, 0).Normalized(), reflected);
     }
 
     [TestMethod]

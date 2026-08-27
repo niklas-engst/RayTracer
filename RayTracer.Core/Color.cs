@@ -33,4 +33,14 @@ public struct Color(byte r, byte g, byte b, byte a)
     {
         return (uint)(A << 24 | R << 16 | G << 8 | B);
     }
+    
+    public static Color FromFloat(float r, float g, float b, float a = 1f)
+    {
+        return new Color(
+            (byte)Math.Clamp((int)(r * 255f), 0, 255),
+            (byte)Math.Clamp((int)(g * 255f), 0, 255),
+            (byte)Math.Clamp((int)(b * 255f), 0, 255),
+            (byte)Math.Clamp((int)(a * 255f), 0, 255)
+        );
+    }
 }

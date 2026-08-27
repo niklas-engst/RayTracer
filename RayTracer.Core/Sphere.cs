@@ -40,11 +40,31 @@ public readonly struct Sphere(Vector3d center, float radius, Material material)
         return (point - Center).Normalized();
     }
 
-    public Color DiffuseShading(Vector3d point, Light lightSource)
+    public Color Shading(Vector3d point, Light light, Vector3d view)
     {
-        var lightDirection = (lightSource.Position - point).Normalized();
         var normal = NormalAt(point);
         
+        var lightDirection = (light.Position - point).Normalized();
+        
+        var diffusedColor =  DiffuseShading(normal, lightDirection);
+        var specularColor = SpecularShading(normal, lightDirection, view);
+
+        return diffusedColor + specularColor;
+    }
+
+    public Color SpecularShading(Vector3d normal, Vector3d light, Vector3d view)
+    {
+        var reflection = light.Reflect(normal);
+        
+        var specularIntensity = MathF.Pow(MathF.Max(0, -reflection.Dot(view)), material.KShininess);
+
+        var specularValue = material.KSpecular * specularIntensity;
+        
+        return Color.FromFloat(specularValue, specularValue, specularValue);
+    }
+    
+    public Color DiffuseShading(Vector3d normal, Vector3d lightDirection)
+    {
         var intensity = MathF.Max(0, normal.Dot(lightDirection));
 
         return Material.KDiffuse * intensity;

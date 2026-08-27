@@ -54,7 +54,7 @@ public struct Vector3d(float x, float y, float z)
 
     public readonly Vector3d Reflect(Vector3d normal)
     {
-        return 2 * (this * normal) * normal - this;
+        return 2 * Dot(normal) * normal - this;
     }
 
     public override string ToString()

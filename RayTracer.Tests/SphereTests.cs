@@ -43,17 +43,43 @@ public sealed class SphereTests
     [TestMethod]
     public void DiffuseShadingUsesLambertianIntensity()
     {
-        var light = new Light(new Vector3d(0, 0, -2));
+        var normal = new Vector3d(0, 0, -1);
+        var lightDirection = new Vector3d(0, 0, -1);
 
-        AssertColorEqual(Material.KDiffuse, Sphere.DiffuseShading(new Vector3d(0, 0, -1), light));
+        AssertColorEqual(Material.KDiffuse, Sphere.DiffuseShading(normal, lightDirection));
     }
 
     [TestMethod]
     public void DiffuseShadingReturnsBlackWhenLightIsBehindSurface()
     {
-        var light = new Light(new Vector3d(0, 0, 2));
+        var normal = new Vector3d(0, 0, -1);
+        var lightDirection = new Vector3d(0, 0, 1);
 
-        AssertColorEqual(new Color(0, 0, 0, 0), Sphere.DiffuseShading(new Vector3d(0, 0, -1), light));
+        AssertColorEqual(new Color(0, 0, 0, 0), Sphere.DiffuseShading(normal, lightDirection));
+    }
+
+    [TestMethod]
+    public void SpecularShadingProducesHighlightWhenReflectionPointsTowardLightSource()
+    {
+        var normal = new Vector3d(0, 0, 1);
+        var lightDirection = new Vector3d(0, 0, 1);
+        var viewDirection = new Vector3d(0, 0, -1);
+
+        var result = Sphere.SpecularShading(normal, lightDirection, viewDirection);
+
+        AssertColorEqual(Color.FromFloat(0.5f, 0.5f, 0.5f), result);
+    }
+
+    [TestMethod]
+    public void SpecularShadingReturnsBlackWhenViewMissesReflection()
+    {
+        var normal = new Vector3d(0, 0, 1);
+        var lightDirection = new Vector3d(0, 0, 1);
+        var viewDirection = new Vector3d(1, 0, 0);
+
+        var result = Sphere.SpecularShading(normal, lightDirection, viewDirection);
+
+        AssertColorEqual(new Color(0, 0, 0, 255), result);
     }
 
     private static void AssertColorEqual(Color expected, Color actual)

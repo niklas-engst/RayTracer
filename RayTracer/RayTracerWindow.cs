@@ -48,7 +48,7 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
         }
         
         var camera = new Vector3d(0, 0, -1);
-        var sphere = new Sphere(new Vector3d(0, 0, 1), 1f, new Material(new Color(0, 255, 255, 255), 1f, 1f));
+        var sphere = new Sphere(new Vector3d(0, 0, 1), 1f, new Material(new Color(0, 255, 255, 255), 0.5f, 100f));
         var light = new Light(new Vector3d(0, 2, -1));
         
         for (var windowY = 0; windowY < RenderHeight; windowY++)
@@ -69,7 +69,7 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
                 if (!float.IsInfinity(intersection))
                 {
                     var intersectionPoint = ray.At(intersection);
-                    var color = sphere.DiffuseShading(intersectionPoint, light);
+                    var color = sphere.Shading(intersectionPoint, light, ray.Direction);
                     Pixels[windowY * RenderWidth + windowX] = color.ToUInt32();
                 }
                 else
