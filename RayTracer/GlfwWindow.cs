@@ -94,7 +94,7 @@ public class GlfwWindow(int width, int height)
             }
 
             GLFW.MakeContextCurrent(window);
-            GL.ClearColor(1, 0.8f, 0.75f, 1);
+            GL.ClearColor(0.1f, 0.1f, 0.12f, 1);
             GL.Clear(GLClearBufferMask.ColorBufferBit);
 
             ImGuiImplOpenGL3.NewFrame();

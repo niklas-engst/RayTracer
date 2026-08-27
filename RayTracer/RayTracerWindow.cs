@@ -5,8 +5,14 @@ namespace RayTracer;
 
 public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, height)
 {
-    protected bool Realtime = true;
-    protected bool SinglePass = false;
+    protected bool Realtime = false;
+    protected bool SinglePass = true;
+
+    protected Vector3d LightPosition =  new Vector3d(0, 2, -1);
+    protected Vector3d SpherePosition = new  Vector3d(0, 0, 1);
+
+    protected float Specular = 1.0f;
+    protected float Shininess = 100.0f;
     
     protected override void RenderInterface()
     {
@@ -30,6 +36,22 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
             SinglePass = true;
         }
 
+        unsafe
+        {
+            fixed (Vector3d* lightPosPtr = &LightPosition)
+            {
+                ImGui.SliderFloat3("Light position", (float*)lightPosPtr, -10, 10);
+            }
+            
+            fixed (Vector3d* spherePosPtr = &SpherePosition)
+            {
+                ImGui.SliderFloat3("Sphere position", (float*)spherePosPtr, -10, 10);
+            }
+            
+            ImGui.SliderFloat("Specular", ref Specular, 0.0f, 5.0f);
+            ImGui.SliderFloat("Shininess", ref Shininess, 0.0f, 200.0f);
+        }
+        
         RenderPixelBuffer();
         
         ImGui.End();
@@ -48,8 +70,8 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
         }
         
         var camera = new Vector3d(0, 0, -1);
-        var sphere = new Sphere(new Vector3d(0, 0, 1), 1f, new Material(new Color(0, 255, 255, 255), 0.5f, 100f));
-        var light = new Light(new Vector3d(0, 2, -1));
+        var sphere = new Sphere(SpherePosition, 1f, new Material(new Color(0, 255, 255, 255), Specular, Shininess));
+        var light = new Light(LightPosition);
         
         for (var windowY = 0; windowY < RenderHeight; windowY++)
         {
