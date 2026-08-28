@@ -14,6 +14,8 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
 
     protected float Specular = 1.0f;
     protected float Shininess = 100.0f;
+
+    protected int InitialDepth = 2;
     
     protected override void RenderInterface()
     {
@@ -56,6 +58,8 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
             
             ImGui.SliderFloat("Specular", ref Specular, 0.0f, 5.0f);
             ImGui.SliderFloat("Shininess", ref Shininess, 0.0f, 200.0f);
+            
+            ImGui.SliderInt("Initial depth", ref InitialDepth, 1, 5);
         }
         
         RenderPixelBuffer();
@@ -83,7 +87,7 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
 
         List<Sphere> objects =
         [
-            new Sphere(SpherePosition, 1f, material),
+            new(SpherePosition, 1f, material),
             new(Sphere2Position, 1.5f, new Material(new Color(255, 0, 0, 255), Specular, Shininess)),
             new(new Vector3d (0, -1001, 0), 1000, earthMaterial)
         ];
@@ -101,15 +105,20 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
                 var rayDirection = (screenPoint - camera).Normalized();
                 var ray = new Ray(camera, rayDirection);
 
-                var color = Raytrace(ray, objects, light);
+                var color = RecursiveRaytrace(ray, objects, light, InitialDepth);
                 
                 Pixels[windowY * RenderWidth + windowX] = color.ToUInt32();
             }
         }
     }
     
-    protected Color Raytrace(Ray ray, List<Sphere> objects, Light light)
+    protected Color RecursiveRaytrace(Ray ray, List<Sphere> objects, Light light, int depth)
     {
+        if (depth <= 0)
+        {
+            return new Color(0, 0, 0, 255); // Base case: return black color
+        }
+        
         var closestIntersection = float.PositiveInfinity;
         Sphere? closestSphere = null;
 
@@ -127,13 +136,22 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
             return new Color(128, 128, 128, 128); // Background color
         
         var intersectionPoint = ray.At(closestIntersection);
-        
-        if (InShadow(intersectionPoint, objects, light))
+
+        Color color = new(0, 0, 0, 255);
+        if (!InShadow(intersectionPoint, objects, light))
         {
-            return new Color(0, 0, 0, 255); // Shadow color
+            color = closestSphere.Value.Shading(intersectionPoint, light, ray.Direction);
         }
+
+        var normal = closestSphere.Value.NormalAt(intersectionPoint);
+        var reflectionDirection = (ray.Direction - 2f * ray.Direction.Dot(normal) * normal).Normalized();
         
-        return closestSphere.Value.Shading(intersectionPoint, light, ray.Direction);
+        var reflectedRay = new Ray(intersectionPoint + normal * 0.001f, reflectionDirection);
+
+        var reflectedColor = RecursiveRaytrace(reflectedRay, objects, light, depth - 1);
+        color += reflectedColor * closestSphere.Value.Material.KSpecular;
+        
+        return color;
     }
     
     protected bool InShadow(Vector3d point, List<Sphere> objects, Light light)
