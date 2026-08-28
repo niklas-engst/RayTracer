@@ -81,6 +81,19 @@ public sealed class SphereTests
 
         AssertColorEqual(new Color(0, 0, 0, 255), result);
     }
+    
+    [TestMethod]
+    public void MakeUvsReturnsCorrectUvCoordinates()
+    {
+        var sphere = new Sphere(new Vector3d(0, 0, 1), 1, new Material(new Color(0, 0, 0, 255), 1, 1));
+        var ray = new Ray(new Vector3d(0, 0, -1), new Vector3d(0, 0, 1));
+        var uvs = sphere.MakeUVs(sphere.NormalAt(ray.At(sphere.Intersection(ray))));
+        
+        Assert.HasCount(2, uvs);
+        
+        var expectedUvs = new[] { -0.25f, 0.5f };
+        CollectionAssert.AreEqual(expectedUvs, uvs);
+    }
 
     private static void AssertColorEqual(Color expected, Color actual)
     {

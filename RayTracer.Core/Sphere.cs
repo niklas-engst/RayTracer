@@ -69,4 +69,15 @@ public readonly struct Sphere(Vector3d center, float radius, Material material)
 
         return Material.KDiffuse * intensity;
     }
+
+    public float[] MakeUVs(Vector3d normal)
+    {
+        var theta = MathF.Atan2(normal.Z, normal.X);
+        var rho = MathF.Acos(-normal.Y);
+
+        var u = theta / (2 * MathF.PI);
+        var v = rho / MathF.PI;
+
+        return [u, v];
+    }
 }
