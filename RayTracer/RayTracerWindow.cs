@@ -77,10 +77,16 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
         
         var camera = new Vector3d(0, 0, -1);
         var material = new CheckeredMaterial(new Color(0, 255, 0, 255), new Color(255, 0, 255, 255), Specular, Shininess, 16, 8);
-        var sphere = new Sphere(SpherePosition, 1f, material);
         var light = new Light(LightPosition);
+        
+        var earthMaterial = new Material ( new Color (255, 219, 188, 255), 0.1f,100) ;
 
-        List<Sphere> objects = [sphere, new Sphere(Sphere2Position, 1.5f, new Material(new Color(255, 0, 0, 255), Specular, Shininess))];
+        List<Sphere> objects =
+        [
+            new Sphere(SpherePosition, 1f, material),
+            new(Sphere2Position, 1.5f, new Material(new Color(255, 0, 0, 255), Specular, Shininess)),
+            new(new Vector3d (0, -1001, 0), 1000, earthMaterial)
+        ];
         
         for (var windowY = 0; windowY < RenderHeight; windowY++)
         {
@@ -121,6 +127,29 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
             return new Color(128, 128, 128, 128); // Background color
         
         var intersectionPoint = ray.At(closestIntersection);
+        
+        if (InShadow(intersectionPoint, objects, light))
+        {
+            return new Color(0, 0, 0, 255); // Shadow color
+        }
+        
         return closestSphere.Value.Shading(intersectionPoint, light, ray.Direction);
+    }
+    
+    protected bool InShadow(Vector3d point, List<Sphere> objects, Light light)
+    {
+        var lightDirection = (light.Position - point).Normalized();
+        var shadowRay = new Ray(point, lightDirection);
+
+        foreach (var sphere in objects)
+        {
+            var intersection = sphere.Intersection(shadowRay);
+            if (intersection > 0.001 && intersection < (light.Position - point).Length())
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
