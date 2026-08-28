@@ -43,10 +43,11 @@ public readonly struct Sphere(Vector3d center, float radius, Material material)
     public Color Shading(Vector3d point, Light light, Vector3d view)
     {
         var normal = NormalAt(point);
+        var (u, v) = MakeUVs(normal);
         
         var lightDirection = (light.Position - point).Normalized();
         
-        var diffusedColor =  DiffuseShading(normal, lightDirection);
+        var diffusedColor =  DiffuseShading(normal, lightDirection, u, v);
         var specularColor = SpecularShading(normal, lightDirection, view);
 
         return diffusedColor + specularColor;
@@ -63,14 +64,14 @@ public readonly struct Sphere(Vector3d center, float radius, Material material)
         return Color.FromFloat(specularValue, specularValue, specularValue);
     }
     
-    public Color DiffuseShading(Vector3d normal, Vector3d lightDirection)
+    public Color DiffuseShading(Vector3d normal, Vector3d lightDirection, float u, float v)
     {
         var intensity = MathF.Max(0, normal.Dot(lightDirection));
 
-        return Material.KDiffuse * intensity;
+        return Material.GetDiffuseColor(u, v) * intensity;
     }
 
-    public float[] MakeUVs(Vector3d normal)
+    public (float u, float v) MakeUVs(Vector3d normal)
     {
         var theta = MathF.Atan2(normal.Z, normal.X);
         var rho = MathF.Acos(-normal.Y);
@@ -78,6 +79,6 @@ public readonly struct Sphere(Vector3d center, float radius, Material material)
         var u = theta / (2 * MathF.PI);
         var v = rho / MathF.PI;
 
-        return [u, v];
+        return (u, v);
     }
 }

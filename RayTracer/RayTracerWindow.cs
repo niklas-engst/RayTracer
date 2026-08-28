@@ -70,7 +70,8 @@ public class RayTracerWindow(int width, int height) : PixelBufferWindow(width, h
         }
         
         var camera = new Vector3d(0, 0, -1);
-        var sphere = new Sphere(SpherePosition, 1f, new Material(new Color(0, 255, 255, 255), Specular, Shininess));
+        var material = new CheckeredMaterial(new Color(0, 255, 0, 255), new Color(255, 0, 255, 255), Specular, Shininess, 16, 8);
+        var sphere = new Sphere(SpherePosition, 1f, material);
         var light = new Light(LightPosition);
         
         for (var windowY = 0; windowY < RenderHeight; windowY++)

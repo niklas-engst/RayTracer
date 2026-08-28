@@ -1,9 +1,14 @@
 namespace RayTracer.Core;
 
-public readonly struct Material(Color kDiffuse, float kSpecular, float kShininess)
+public class Material(Color kDiffuse, float kSpecular, float kShininess)
 {
-    public readonly Color KDiffuse = kDiffuse;
+    protected readonly Color KDiffuse = kDiffuse;
 
     public readonly float KSpecular = kSpecular;
     public readonly float KShininess = kShininess;
+
+    public virtual Color GetDiffuseColor(float u, float v)
+    {
+        return KDiffuse;
+    }
 }
